@@ -12,4 +12,4 @@ live 3d dice
 - 動作確認
   - ```npx electron .```
 - パッケージング
-  - ```npx electron-packager . chatgpt-client --platform=win32 --arch=x64 --icon=icon.ico --overwrite```
+  - ```npx electron-packager . live3ddice --platform=win32 --arch=x64 --icon=icon.ico --overwrite```
