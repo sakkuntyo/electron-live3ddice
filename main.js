@@ -56,10 +56,12 @@ function startHttpServer() {
 
     if (url.pathname === '/roll') {
       if (win && !win.isDestroyed()) {
-        win.webContents.send('dice:roll'); // ← face不要
+        var face = Math.floor(Math.random() * 6 ) + 1
+        console.log(`face:${face}`)
+        win.webContents.send('dice:roll', { face } );
       }
       res.statusCode = 200;
-      return res.end(JSON.stringify({ action: 'roll' }));
+      return res.end(JSON.stringify({ action: 'roll', face: face }));
     }
 
     // その他は 404

@@ -4,6 +4,10 @@ live 3d dice
 
 <img width="1266" height="633" alt="image" src="https://github.com/user-attachments/assets/5084174a-0aa6-4751-a18a-54d4c721ab7a" />
 
+# セットアップ方法や使い方
+
+後で書きます
+
 # 概要
 - nodejs 18.15 で動作確認。
 - npm install したパッケージは npx で使用する必要があります。

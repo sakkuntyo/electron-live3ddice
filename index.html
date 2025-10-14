@@ -245,11 +245,11 @@
 
     //ipc
     if (window.diceAPI) {
-      window.diceAPI.onRoll(() => {
+      window.diceAPI.onRoll((payload) => {
         clearInterval(loopInterval);
         loopInterval = null;
 
-        var face = Math.floor(Math.random() * 6 ) + 1
+        const face = typeof payload === 'number' ? payload : payload?.face;
 
         const target = faceAngles[face];
 
