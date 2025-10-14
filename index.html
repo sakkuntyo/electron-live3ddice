@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live 3D Dice</title>
+  <style>
+    :root{
+      --bg: #0f0;
+      --face-br: 0px;
+      --face-bw: 1px;
+      --face-bc: #333333;
+      --face-bg: #000000;
+      --face-color: #dddddd;
+    }
+
+    .app{
+      display:flex;
+      height:100vh;
+      width:100%;
+      overflow:hidden;
+      background: var(--bg);
+    }
+    .left{
+      flex:3; /* 3/4 */
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-width:0;
+    }
+    .right{
+      flex:1; /* 1/4 */
+      min-width:260px;
+      max-width:480px;
+      background:#111;
+      color:#eee;
+      padding:16px;
+      box-sizing:border-box;
+      overflow:auto;
+      border-left:1px solid rgba(255,255,255,0.1);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+    }
+    .panel h2{ margin:0 0 12px; font-size:18px; }
+    .panel .row{ display:flex; align-items:center; gap:10px; margin:10px 0; }
+    .panel label{ min-width:130px; font-size:13px; color:#ccc; }
+    .panel input[type="range"]{ width:160px; }
+    .panel .hint{ font-size:12px; color:#aaa; }
+
+    body { background-color: var(--bg); margin:0; }
+    .stage {
+      perspective: 1000px;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: var(--bg);
+    }
+
+    .dice {
+      display: block;
+      position: relative;
+      margin: 100px auto;
+      width: 100px;
+      height: 100px;
+      transform-style: preserve-3d;
+      transition: transform 2s ease-out;
+    }
+
+    .dice .item {
+      position: absolute;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: var(--face-bw) solid var(--face-bc); /* editable */
+      width: 100px;
+      height: 100px;
+      background-color: var(--face-bg);          /* editable */
+      font-size: 3rem;
+      color: var(--face-color);                  /* editable */
+      border-radius: var(--face-br);             /* editable */
+      box-shadow: inset 0 0 15px rgba(255,255,255,0.3);
+      transform: scale(0.2); // unable?
+    }
+
+    .dice .item:nth-child(1) { transform: translate3d(0, -50px, 0) rotateX(90deg); }
+    .dice .item:nth-child(2) { transform: translate3d(0, 0, 50px); }
+    .dice .item:nth-child(3) { transform: translate3d(50px, 0, 0) rotateY(90deg); }
+    .dice .item:nth-child(4) { transform: translate3d(-50px, 0, 0) rotateY(-90deg); }
+    .dice .item:nth-child(5) { transform: translate3d(0, 0, -50px) rotateY(180deg); }
+    .dice .item:nth-child(6) { transform: translate3d(0, 50px, 0) rotateX(-90deg); }
+
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .panel .btn {
+      display:inline-block;
+      margin:6px 6px 0 0;
+      padding:8px 12px;
+      font-size:13px;
+      color:#eee; background:#2a2a2a; border:1px solid #3c3c3c; border-radius:6px; cursor:pointer;
+    }
+    .panel .btn:hover{ background:#333; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="left">
+      <div class="stage">
+        <div class="dice" id="dice">
+          <div class="item">1</div>
+          <div class="item">2</div>
+          <div class="item">3</div>
+          <div class="item">4</div>
+          <div class="item">5</div>
+          <div class="item">6</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- control panel -->
+    <aside class="right">
+      <div class="panel">
+        <h2>control panel</h2>
+
+        <div class="row">
+          <label for="bg">background color</label>
+          <input id="bg" type="color" value="#00ff00">
+        </div>
+
+        <div class="row">
+          <label for="faceBg">face color</label>
+          <input id="faceBg" type="color" value="#000000">
+        </div>
+
+        <div class="row">
+          <label for="faceColor">num color</label>
+          <input id="faceColor" type="color" value="#dddddd">
+        </div>
+
+        <div class="row">
+          <label for="borderToggle">border</label>
+          <input id="borderToggle" type="checkbox" checked>
+        </div>
+
+        <div class="row">
+          <label for="br">border radius</label>
+          <input id="br" type="range" min="0" max="30" value="0">
+          <span id="brVal">0px</span>
+        </div>
+
+        <div class="row">
+          <label for="bw">border width</label>
+          <input id="bw" type="range" min="0" max="10" value="1">
+          <span id="bwVal">1px</span>
+        </div>
+
+        <div class="row">
+          <label for="bc">border color</label>
+          <input id="bc" type="color" value="#333333">
+        </div>
+
+        <div style="margin-top:10px">
+          <button class="btn" id="reset">reset</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    const dice = document.getElementById("dice");
+
+    let loopInterval = null;
+    loopInterval = setInterval(() => {
+      const randX = 360 * (Math.floor(Math.random() * 2) + 2);
+      const randY = 360 * (Math.floor(Math.random() * 2) + 2);
+      dice.style.transition = "transform 10s ease-out";
+      dice.style.transform = `rotateX(${randX}deg) rotateY(${randY}deg)`;
+    }, 2800);
+
+    const root = document.documentElement;
+
+    const $ = (id)=>document.getElementById(id);
+    const bg = $("bg");
+    const faceBg = $("faceBg");
+    const faceColor = $("faceColor");
+    const br = $("br");
+    const brVal = $("brVal");
+    const borderToggle = $("borderToggle");
+    const bw = $("bw");
+    const bwVal = $("bwVal");
+    const bc = $("bc");
+    const reset = $("reset");
+
+    function setVar(name, value){ root.style.setProperty(name, value); }
+
+    bg.addEventListener("input", e => setVar("--bg", e.target.value));
+    faceBg.addEventListener("input", e => setVar("--face-bg", e.target.value));
+    faceColor.addEventListener("input", e => setVar("--face-color", e.target.value));
+
+    br.addEventListener("input", e => {
+      brVal.textContent = `${e.target.value}px`;
+      setVar("--face-br", `${e.target.value}px`);
+    });
+
+    bw.addEventListener("input", e => {
+      bwVal.textContent = `${e.target.value}px`;
+      setVar("--face-bw", `${e.target.value}px`);
+      if (parseInt(e.target.value,10) > 0 && !borderToggle.checked) {
+        borderToggle.checked = true;
+      }
+    });
+
+    bc.addEventListener("input", e => setVar("--face-bc", e.target.value));
+
+    borderToggle.addEventListener("change", e => {
+      setVar("--face-bw", e.target.checked ? `${bw.value}px` : "0px");
+    });
+
+    reset.addEventListener("click", () => {
+      bg.value = "#00ff00"; setVar("--bg", "#0f0");
+      faceBg.value = "#000000"; setVar("--face-bg", "#000");
+      faceColor.value = "#dddddd"; setVar("--face-color", "#ddd");
+      br.value = 0; brVal.textContent = "0px"; setVar("--face-br", "0px");
+      borderToggle.checked = true;
+      bw.value = 1; bwVal.textContent = "1px"; setVar("--face-bw", "1px");
+      bc.value = "#333333"; setVar("--face-bc", "#333333");
+    });
+  </script>
+</body>
+</html>
