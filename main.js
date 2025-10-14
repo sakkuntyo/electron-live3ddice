@@ -54,13 +54,12 @@ function startHttpServer() {
       return res.end(JSON.stringify({ ok: true, pong: true }));
     }
 
-    // 例: /roll?face=6
     if (url.pathname === '/roll') {
+      if (win && !win.isDestroyed()) {
+        win.webContents.send('dice:roll'); // ← face不要
+      }
       res.statusCode = 200;
-      return res.end(JSON.stringify({
-        action: 'roll',
-        face : null,
-      }));
+      return res.end(JSON.stringify({ action: 'roll' }));
     }
 
     // その他は 404
