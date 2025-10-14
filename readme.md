@@ -17,7 +17,7 @@ streamer.bot 等と連携させる事で、ライブ配信視聴者のチャッ�
 - nodejs 18.15 (exe実行する場合は不要)
 - streamer.bot 1.0.1
 
-# 開発
+# 開発メモ
 - npm install したパッケージは npx で使用する必要があります。
 - テスト起動
   - ```npx electron .```
