@@ -19,7 +19,7 @@ stages:
           displayName: 'Build with electron-builder (win + zip)'
           npm ci
           npx electron-packager . live3ddice --platform=win32 --arch=x64 --icon=icon.ico --overwrite
-          npx bestzip live3ddice-win32-x64.zip .\live3ddice-win32-x64
+          npx bestzip "live3ddice-win32-x64-$((cat .\package.json | ConvertFrom-Json).version).zip" .\live3ddice-win32-x64
       # dist/*.zip などを GitHub Release に添付
       - task: GitHubRelease@1
         displayName: 'Create GitHub Release + upload assets'
