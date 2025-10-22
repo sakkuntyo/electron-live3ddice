@@ -9,7 +9,7 @@ stages:
 - stage: build_and_release_win
   displayName: Build (Windows) & Create GitHub Release
   jobs:
-  - job: win
+  - job: live3d-release
     pool:
       name: Default
       demands:
@@ -27,7 +27,8 @@ stages:
           # Windowsターゲットも作るなら wine を入れる（不要なら丸ごと削除OK）
           sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install -y wine64 wine32
+          sudo apt-get install -y wine64 wine32 git git-lfs 
+          sudo git lfs install
           npm ci
           npx electron-packager . live3ddice --platform=win32 --arch=x64 --icon=icon.ico --overwrite
           npx bestzip "live3ddice-win32-x64-$((cat .\package.json | ConvertFrom-Json).version).zip" .\live3ddice-win32-x64
