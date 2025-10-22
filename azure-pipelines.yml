@@ -9,7 +9,7 @@ stages:
 - stage: build_and_release_win
   displayName: Build (Windows) & Create GitHub Release
   jobs:
-  - job: live3d-release
+  - job: live3drelease
     pool:
       name: Default
       demands:
