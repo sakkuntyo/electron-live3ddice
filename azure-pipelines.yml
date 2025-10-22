@@ -41,8 +41,8 @@ stages:
           repositoryName: 'sakkuntyo/electron-live3ddice'
           action: 'create'
           target: '$(Build.SourceVersion)'
-          tagSource: 'manual'
-          tag: '$(Build.SourceBranchName)'                  # 例: v1.2.3
+          tagSource: 'gitTag'
+          #tag: '$(Build.SourceBranchName)'                  # 例: v1.2.3
           title: '$(Build.SourceBranchName)'
           assets: './*.zip'
           isDraft: false
