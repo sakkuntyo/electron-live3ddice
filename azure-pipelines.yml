@@ -11,7 +11,9 @@ stages:
   jobs:
   - job: win
     pool:
-      vmImage: 'windows-latest'
+      name: Default
+      demands:
+        - 'Agent.Name -equals WIN11-SELFHOST'
     steps:
       - task: NodeTool@0
         inputs: { versionSpec: '18.x' }
