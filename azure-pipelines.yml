@@ -1,4 +1,4 @@
-﻿trigger:
+trigger:
   tags:
     include:
       - 'v*'   # 例: v1.2.3 を push したときだけ動かす
