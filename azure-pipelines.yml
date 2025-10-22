@@ -37,7 +37,7 @@ stages:
       - task: GitHubRelease@1
         displayName: 'Create GitHub Release + upload assets'
         inputs:
-          gitHubConnection: 'github.com_sakkuntyo'   # Project settings > Service connections で作成
+          gitHubConnection: 'github-sakkuntyo-repopat'   # Project settings > Service connections で作成
           repositoryName: 'sakkuntyo/electron-live3ddice'
           action: 'create'
           target: '$(Build.SourceVersion)'
