@@ -279,6 +279,7 @@
 
         dice.style.transform = `rotateX(${finalX}deg) rotateY(${finalY}deg)`;
         loopInterval = setTimeout(() => {
+          loopInterval = null;
 	  startAutoRotate();
         }, arw * 1000);
       });
