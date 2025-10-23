@@ -172,6 +172,12 @@
           <input id="arw" type="range" min="5" max="30" value="10">
           <span id="arwVal">10sec</span>
         </div>
+        
+	<div class="row">
+          <label for="arst">auto rotate spin times</label>
+          <input id="arst" type="range" min="4" max="30" value="4">
+          <span id="arstVal">4</span>
+        </div>
 
         <div style="margin-top:10px">
           <button class="btn" id="reset">reset</button>
@@ -181,18 +187,15 @@
   </div>
 
   <script>
-    const dice = document.getElementById("dice");
-    let loopInterval = null;
-    function startAutoRotate(){
-      loopInterval = null;
-      loopInterval = setInterval(() => {
-        const randX = 360 * (Math.floor(Math.random() * 2) + 2);
-        const randY = 360 * (Math.floor(Math.random() * 2) + 2);
-        dice.style.transition = "transform 10s ease-out";
-        dice.style.transform = `rotateX(${randX}deg) rotateY(${randY}deg)`;
-      }, 8000);
-    }
-    startAutoRotate();
+
+    const faceAngles = {
+      1: { x: -90, y: 0 },
+      2: { x: 0,   y: 0 },
+      3: { x: 0,   y: -90 },
+      4: { x: 0,   y: 90 },
+      5: { x: 0,   y: 180 },
+      6: { x: 90,  y: 0 }
+    };
 
     const root = document.documentElement;
 
@@ -205,8 +208,10 @@
     const borderToggle = $("borderToggle");
     const bw = $("bw");
     const bwVal = $("bwVal");
-    const awr = $("arw");
+    const arw = $("arw");
     const arwVal = $("arwVal");
+    const awst = $("arst");
+    const arstVal = $("arstVal");
     const bc = $("bc");
     const reset = $("reset");
 
@@ -233,6 +238,10 @@
       arwVal.textContent = `${e.target.value}sec`;
     });
 
+    arst.addEventListener("input", e => {
+      arstVal.textContent = `${e.target.value}`;
+    });
+
     bc.addEventListener("input", e => setVar("--face-bc", e.target.value));
 
     borderToggle.addEventListener("change", e => {
@@ -249,14 +258,22 @@
       bc.value = "#333333"; setVar("--face-bc", "#333333");
     });
 
-    const faceAngles = {
-      1: { x: -90, y: 0 },
-      2: { x: 0,   y: 0 },
-      3: { x: 0,   y: -90 },
-      4: { x: 0,   y: 90 },
-      5: { x: 0,   y: 180 },
-      6: { x: 90,  y: 0 }
-    };
+    const dice = document.getElementById("dice");
+
+    let loopInterval = null;
+
+    function startAutoRotate(){
+      loopInterval = setInterval(() => {
+        const target = faceAngles[(Math.floor(Math.random() * 6) + 1)];
+        const randX = 360 * (Math.floor(Math.random() * arst.value) + 2);
+        const randY = 360 * (Math.floor(Math.random() * arst.value) + 2);
+        const finalX = randX + target.x;
+        const finalY = randY + target.y;
+        dice.style.transition = "transform 10s ease-out";
+        dice.style.transform = `rotateX(${finalX}deg) rotateY(${finalY}deg)`;
+      }, 6000);
+    }
+    startAutoRotate();
 
     //ipc
     if (window.diceAPI) {
@@ -281,7 +298,7 @@
         loopInterval = setTimeout(() => {
           loopInterval = null;
 	  startAutoRotate();
-        }, arw * 1000);
+        }, arw.value * 1000);
       });
     }
   </script>
