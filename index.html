@@ -275,6 +275,12 @@
     }
     startAutoRotate();
 
+    dice.addEventListener('transitionend', (e) => {
+      if (e.propertyName !== 'transform') return; // 他のプロパティは無視
+      //alert('[dice] transform end, elapsed ' + e.elapsedTime + ' sec');
+      console.log('[dice] transform end, elapsed ' + e.elapsedTime + ' sec');
+    }, { once: false });
+
     //ipc
     if (window.diceAPI) {
       window.diceAPI.onRoll((payload) => {
