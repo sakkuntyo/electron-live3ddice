@@ -10,8 +10,8 @@ let rollQueue = []; //{rollId}
 
 function createWindow() {
   win = new BrowserWindow({
-    width: 1280,
-    height: 640,
+    width: 640,
+    height: 370,
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),

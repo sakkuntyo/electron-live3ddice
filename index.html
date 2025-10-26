@@ -31,18 +31,16 @@
       <input id="dicez" type="range" min="1" max="100" value="1">
       <span id="dicezVal">z 0.1</span>
     </span>
+    <!--
     <span>camera
       <input id="camerax" type="range" min="1" max="30" value="1">
       <span id="cameraxVal">x 0.1</span>
       <input id="cameray" type="range" min="1" max="30" value="1">
       <span id="camerayVal">y 0.1</span>
-      <!--
       <input id="cameraz" type="range" min="1" max="30" value="1">
       <span id="camerazVal">z 0.1</span>
-      -->
     </span>
-
-
+    -->
   </div>
 
   <script type="module">
@@ -53,8 +51,8 @@
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
-    //camera.position.set(3.5, 2.2, 3.5);
-    camera.position.set(0, 0, 0);
+    camera.position.set(3.5, 3.5, 3.5);
+//    camera.position.set(0, 0, 0);
     camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
@@ -125,30 +123,25 @@
     // ===== Auto Rotate =====
     let autoRotate = true;
     const autoState = document.getElementById('autoState');
-    document.getElementById('autoBtn').addEventListener('click', () => {
-      autoRotate = !autoRotate;
-      autoState.textContent = autoRotate ? 'ON' : 'OFF';
-    });
 
     // ===== Roll（90°単位でぴったり止まる） =====
     function randInt(min, max) { return (min + Math.floor(Math.random() * (max - min + 1))); }
 
 function roll() {
-  const q = Math.PI / 2;      // 90°
-  const spinsX = randInt(0, 4); // 0~4回転
+  const q = Math.PI / 2;
+
+  auto.active = false;
+
+  const spinsX = randInt(0, 4);   // ←回転数お好みで
   const spinsY = randInt(0, 4);
-  const endXIdx = randInt(0, 3); // 0,1,2,3 → 0,90,180,270°
+  const endXIdx = randInt(0, 3);
   const endYIdx = randInt(0, 3);
 
-  // 今の角度
   const startX = cube.rotation.x;
   const startY = cube.rotation.y;
 
-  // いまの「90°インデックス」
   const curXIdx = Math.round(startX / q);
   const curYIdx = Math.round(startY / q);
-
-  // 目標インデックスとの差（0..3に正規化）+ 回転数*4（=2π）
   const dQuarterX = ((endXIdx - curXIdx) % 4 + 4) % 4;
   const dQuarterY = ((endYIdx - curYIdx) % 4 + 4) % 4;
 
@@ -158,43 +151,103 @@ function roll() {
   const endX = startX + deltaX;
   const endY = startY + deltaY;
 
-  const duration = 1600; // ms
+  const duration = 3000;
   const t0 = performance.now();
-  const wasAuto = autoRotate;
-  autoRotate = false; // 自動回転と競合させない
-
-  const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+  const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
 
   function step(now) {
     const t = Math.min(1, (now - t0) / duration);
     const k = easeOutCubic(t);
-//    cube.rotation.x = startX + deltaX * k;
-//    cube.rotation.y = startY + deltaY * k;
-//alert((0 + Math.floor(Math.random() * (2 - 0 + 1))))
+    cube.rotation.x = startX + deltaX * k;
+    cube.rotation.y = startY + deltaY * k;
 
     if (t < 1) {
       requestAnimationFrame(step);
     } else {
-      setTimeout(() => {
-        autoRotate = wasAuto;
-      },5000)
+      // ★ 追加：オートがONなら再開予約
+      if (auto.enabled) {
+        auto.active = false;
+        auto.nextAt = performance.now() + 800;
+      }
     }
   }
   requestAnimationFrame(step);
+}
+
+// ==== Auto-rotate（roll と同じく Euler を補間）====
+const Q = Math.PI / 2;                         // 90°
+const ease = t => 1 - Math.pow(1 - t, 3);      // easeOutCubic
+
+const auto = {
+  enabled: true,   // Auto-rotate の ON/OFF
+  active:  false,
+  startX: 0, startY: 0,
+  endX:   0, endY:   0,
+  t0: 0, dur: 2000,
+  nextAt: 0
+};
+
+// ボタンで ON/OFF
+autoBtn.addEventListener('click', () => {
+  auto.enabled = !auto.enabled;
+  autoState.textContent = auto.enabled ? 'ON' : 'OFF';
+  if (!auto.enabled) auto.active = false;
+});
+
+// 次のゴール（3〜4回転してから 90°に収束）
+function planAuto(spinsMin = -10, spinsMax = 10) {
+  const sx = randInt(spinsMin, spinsMax);  // X 方向の回転回数
+  const sy = randInt(spinsMin, spinsMax);  // Y 方向の回転回数
+  const ex = randInt(0, 3);                // 0,90,180,270°
+  const ey = randInt(0, 3);
+
+  auto.startX = cube.rotation.x;
+  auto.startY = cube.rotation.y;
+
+  const curX = Math.round(auto.startX / Q);
+  const curY = Math.round(auto.startY / Q);
+  const dqX  = ((ex - curX) % 4 + 4) % 4;
+  const dqY  = ((ey - curY) % 4 + 4) % 4;
+
+  auto.endX = auto.startX + dqX * Q + sx * 2 * Math.PI;
+  auto.endY = auto.startY + dqY * Q + sy * 2 * Math.PI;
+
+  auto.t0  = performance.now();
+  auto.dur = 10000; //1回にかける時間
+  auto.active = true;
+}
+
+// 1フレーム進める
+function stepAuto(now){
+  if (!auto.active) return;
+  const t = Math.min(1, (now - auto.t0) / auto.dur);
+  const k = ease(t);
+  cube.rotation.x = auto.startX + (auto.endX - auto.startX) * k;
+  cube.rotation.y = auto.startY + (auto.endY - auto.startY) * k;
+
+  if (t >= 0.7) {
+    // 最後に 90°グリッドへスナップ
+    cube.rotation.x = Math.round(cube.rotation.x / Q) * Q;
+    cube.rotation.y = Math.round(cube.rotation.y / Q) * Q;
+    auto.active = false;
+    auto.nextAt = now; //止まるより少し前に次に進む
+  }
 }
 
     document.getElementById('rollBtn').addEventListener('click', roll);
 
     // ===== ループ =====
     function tick() {
-      if (autoRotate) {
-        cube.rotation.x += 0.005;
-        cube.rotation.y += 0.005;
-        cube.rotation.z += 0.005;
-      }
-      controls.update();
-      renderer.render(scene, camera);
-      requestAnimationFrame(tick);
+  const now = performance.now();
+
+  if (auto.enabled) {
+    if (!auto.active && now >= auto.nextAt) planAuto();
+    stepAuto(now);
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
     }
     tick();
 
@@ -204,6 +257,8 @@ function roll() {
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
+
+
 
     //input
     dicex.addEventListener("input", e => {
