@@ -275,12 +275,6 @@
     }
     startAutoRotate();
 
-    dice.addEventListener('transitionend', (e) => {
-      if (e.propertyName !== 'transform') return; // 他のプロパティは無視
-      //alert('[dice] transform end, elapsed ' + e.elapsedTime + ' sec');
-      console.log('[dice] transform end, elapsed ' + e.elapsedTime + ' sec');
-    }, { once: false });
-
     //ipc
     if (window.diceAPI) {
       window.diceAPI.onRoll((payload) => {
@@ -301,10 +295,24 @@
         const finalY = randY + target.y;
 
         dice.style.transform = `rotateX(${finalX}deg) rotateY(${finalY}deg)`;
-        loopInterval = setTimeout(() => {
-          loopInterval = null;
-	  startAutoRotate();
-        }, arw.value * 1000);
+        const onEnd = (e) => {
+          if (e.propertyName !== 'transform') return;
+          dice.style.transition = "transform 3s ease-out";
+          dice.style.transform = `rotateX(${finalX + 1}deg) rotateY(${finalY + 1}deg)`;
+          const onEnd2 = (e) => {
+            if (e.propertyName !== 'transform') return;
+            dice.removeEventListener('transitionend', onEnd2);
+            //alert('[dice] transform end, elapsed ' + e.elapsedTime + ' sec');
+            window.diceAPI.notifyDone({ name });
+            loopInterval = setTimeout(() => {
+              loopInterval = null;
+              startAutoRotate();
+            }, arw.value * 1000);
+          };
+          dice.removeEventListener('transitionend', onEnd);
+          dice.addEventListener('transitionend', onEnd2, { once: true });
+        };
+        dice.addEventListener('transitionend', onEnd, { once: true });
       });
     }
   </script>

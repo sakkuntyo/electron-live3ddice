@@ -1,10 +1,12 @@
 // main.js
-const { app, BrowserWindow, Menu } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain } = require('electron');
 const http = require('http');
 const { URL } = require('url');
 const path = require('path');
 
 let win;
+let rollId = 0;
+let rollQueue = []; //{rollId}
 
 function createWindow() {
   win = new BrowserWindow({
@@ -34,7 +36,7 @@ function createWindow() {
 }
 
 function startHttpServer() {
-  const server = http.createServer((req, res) => {
+  const server = http.createServer(async (req, res) => {
     console.log(`[HTTP] ${req.method} ${req.url}`);
 
     const url = new URL(req.url, 'http://localhost');
@@ -55,13 +57,34 @@ function startHttpServer() {
     }
 
     if (url.pathname === '/roll') {
+      const name = String(url.searchParams.get('name'));
       if (win && !win.isDestroyed()) {
         var face = Math.floor(Math.random() * 6 ) + 1
         console.log(`face:${face}`)
-        win.webContents.send('dice:roll', { face } );
+        console.log(`name:${name}`)
+        rollId += 1;
+	const myRollId = rollId;
+	rollQueue.push(rollId);
+	let intervalId;
+        await new Promise((resolve) => {
+          intervalId = setInterval(()=>{
+            //console.log("rollQueue[0] -> " + rollQueue[0])
+            //console.log("myRollId -> " + myRollId)
+            if(rollQueue[0] === myRollId){
+              resolve();
+	    }
+	  },100);
+	});
+        clearInterval(intervalId);
+        win.webContents.send('dice:roll', { face, name } );
+        const result = await new Promise((resolve) => {
+          const onDone = (_ev, payload) => { resolve({ ok:true, ...payload }); };
+          ipcMain.once('dice:roll:done', onDone);
+        });
+        res.statusCode = 200;
+        rollQueue.shift();
+        return res.end(JSON.stringify({ action: 'roll', face: face, name: name}));
       }
-      res.statusCode = 200;
-      return res.end(JSON.stringify({ action: 'roll', face: face }));
     }
 
     // その他は 404
