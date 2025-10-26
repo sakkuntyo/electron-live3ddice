@@ -22,4 +22,4 @@
 - テスト起動
   - ```npx electron .```
 - パッケージング
-  - ```npx electron-packager . live3ddice --platform=win32 --arch=x64 --icon=icon.ico --overwrite```
+  - ```npx electron-packager . live3ddice --platform=win32 --arch=x64 --icon=favicon.ico --overwrite```
