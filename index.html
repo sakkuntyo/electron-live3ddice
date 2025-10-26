@@ -1,451 +1,243 @@
-<!DOCTYPE html>
-<html lang="ja">
+<!doctype html>
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Live 3D Dice</title>
+  <meta charset="utf-8" />
+  <title>three.js Cube (D6)</title>
+
+  <!-- three と addons の解決先を指定 -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./node_modules/three/build/three.module.js",
+      "three/addons/": "./node_modules/three/examples/jsm/"
+    }
+  }
+  </script>
+
   <style>
-    :root{
-      --bg: #0f0;
-      --face-br: 0px;
-      --face-bw: 1px;
-      --face-bc: #333333;
-      --face-bg: #000000;
-      --face-color: #dddddd;
-    }
-
-    .app{
-      display:flex;
-      height:100vh;
-      width:100%;
-      overflow:hidden;
-      background: var(--bg);
-    }
-    .left{
-      flex:3; /* 3/4 */
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      min-width:0;
-    }
-    .right{
-      flex:1; /* 1/4 */
-      min-width:260px;
-      max-width:480px;
-      background:#111;
-      color:#eee;
-      padding:16px;
-      box-sizing:border-box;
-      overflow:auto;
-      border-left:1px solid rgba(255,255,255,0.1);
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
-    }
-    .panel h2{ margin:0 0 12px; font-size:18px; }
-    .panel .row{ display:flex; align-items:center; gap:10px; margin:10px 0; }
-    .panel label{ min-width:130px; font-size:13px; color:#ccc; }
-    .panel input[type="range"]{ width:160px; }
-    .panel .hint{ font-size:12px; color:#aaa; }
-
-    body { background-color: var(--bg); margin:0; }
-    .stage {
-      perspective: 1000px;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background: var(--bg);
-    }
-
-    .dice {
-      display: block;
-      position: relative;
-      margin: 100px auto;
-      width: 100px;
-      height: 100px;
-      transform-style: preserve-3d;
-      transition: transform 2s ease-out;
-    }
-
-    .dice .item {
-      position: absolute;
-      left: 0;
-      right: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: var(--face-bw) solid var(--face-bc); /* editable */
-      width: 100px;
-      height: 100px;
-      background-color: var(--face-bg);          /* editable */
-      font-size: 3rem;
-      color: var(--face-color);                  /* editable */
-      border-radius: var(--face-br);             /* editable */
-      box-shadow: inset 0 0 15px rgba(255,255,255,0.3);
-      transform: scale(0.2); // unable?
-    }
-
-    .dice .item:nth-child(1) { transform: translate3d(0, -50px, 0) rotateX(90deg); }
-    .dice .item:nth-child(2) { transform: translate3d(0, 0, 50px); }
-    .dice .item:nth-child(3) { transform: translate3d(50px, 0, 0) rotateY(90deg); }
-    .dice .item:nth-child(4) { transform: translate3d(-50px, 0, 0) rotateY(-90deg); }
-    .dice .item:nth-child(5) { transform: translate3d(0, 0, -50px) rotateY(180deg); }
-    .dice .item:nth-child(6) { transform: translate3d(0, 50px, 0) rotateX(-90deg); }
-
-    button {
-      margin-top: 10px;
-      padding: 10px 20px;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-
-    .panel .btn {
-      display:inline-block;
-      margin:6px 6px 0 0;
-      padding:8px 12px;
-      font-size:13px;
-      color:#eee; background:#2a2a2a; border:1px solid #3c3c3c; border-radius:6px; cursor:pointer;
-    }
-    .panel .btn:hover{ background:#333; }
+    html,body{margin:0;height:100%;background:#0f0;}
+    canvas{display:block;width:100%;height:100%}
   </style>
 </head>
 <body>
-  <div class="app">
-    <div class="left">
-      <div class="stage">
-        <div class="dice" id="dice">
-          <div class="item" style="font-size:3rem">1</div>
-          <div class="item" style="font-size:3rem">2</div>
-          <div class="item" style="font-size:3rem">3</div>
-          <div class="item" style="font-size:3rem">4</div>
-          <div class="item" style="font-size:3rem">5</div>
-          <div class="item" style="font-size:3rem">6</div>
-        </div>
-      </div>
-    </div>
+  <div id="overlay">
+    <button id="rollBtn" class="btn">🎲 Roll</button>
+    <button id="autoBtn" class="btn">Auto-rotate: <span id="autoState">ON</span></button>
+    <span>dice
+      <input id="dicex" type="range" min="1" max="100" value="1">
+      <span id="dicexVal">x 0.1</span>
+      <input id="dicey" type="range" min="1" max="100" value="1">
+      <span id="diceyVal">y 0.1</span>
+      <input id="dicez" type="range" min="1" max="100" value="1">
+      <span id="dicezVal">z 0.1</span>
+    </span>
+    <span>camera
+      <input id="camerax" type="range" min="1" max="30" value="1">
+      <span id="cameraxVal">x 0.1</span>
+      <input id="cameray" type="range" min="1" max="30" value="1">
+      <span id="camerayVal">y 0.1</span>
+      <!--
+      <input id="cameraz" type="range" min="1" max="30" value="1">
+      <span id="camerazVal">z 0.1</span>
+      -->
+    </span>
 
-    <!-- control panel -->
-    <aside class="right">
-      <div class="panel">
-        <h2>control panel</h2>
 
-        <div class="row">
-          <label for="bg">background color</label>
-          <input id="bg" type="color" value="#00ff00">
-        </div>
-
-        <div class="row">
-          <label for="faceBg">face color</label>
-          <input id="faceBg" type="color" value="#000000">
-        </div>
-
-        <div class="row">
-          <label for="faceColor">num color</label>
-          <input id="faceColor" type="color" value="#dddddd">
-        </div>
-
-        <div class="row">
-          <label for="borderToggle">border</label>
-          <input id="borderToggle" type="checkbox" checked>
-        </div>
-
-        <div class="row">
-          <label for="br">border radius</label>
-          <input id="br" type="range" min="0" max="30" value="0">
-          <span id="brVal">0px</span>
-        </div>
-
-        <div class="row">
-          <label for="bw">border width</label>
-          <input id="bw" type="range" min="0" max="10" value="1">
-          <span id="bwVal">1px</span>
-        </div>
-
-        <div class="row">
-          <label for="bc">border color</label>
-          <input id="bc" type="color" value="#333333">
-        </div>
-
-        <div class="row">
-          <label for="rsc">rotate spin count</label>
-          <input id="rsc" type="range" min="4" max="30" value="10">
-          <span id="rscVal">4</span>
-        </div>
-
-        <div class="row">
-          <label for="arw">Auto-rotate wait</label>
-          <input id="arw" type="range" min="5" max="30" value="10">
-          <span id="arwVal">10sec</span>
-        </div>
-        
-	<div class="row">
-          <label for="arst">Auto-rotate spin count</label>
-          <input id="arst" type="range" min="4" max="30" value="4">
-        </div>
-
-	<div class="row">
-          <label for="f1l">face 1 label</label>
-          <input id="f1l" type="text" value="1">
-        </div>
-
-	<div class="row">
-          <label for="f1ls">face 1 label size</label>
-          <input id="f1ls" type="range" min="3" max="10" value="4">
-        </div>
-
-	<div class="row">
-          <label for="f2l">face 2 label</label>
-          <input id="f2l" type="text" value="2">
-        </div>
-
-	<div class="row">
-          <label for="f2ls">face 2 label size</label>
-          <input id="f2ls" type="range" min="3" max="10" value="4">
-        </div>
-
-	<div class="row">
-          <label for="f3l">face 3 label</label>
-          <input id="f3l" type="text" value="3">
-        </div>
-
-	<div class="row">
-          <label for="f3ls">face 1 label size</label>
-          <input id="f3ls" type="range" min="3" max="10" value="4">
-        </div>
-
-	<div class="row">
-          <label for="f4l">face 4 label</label>
-          <input id="f4l" type="text" value="4">
-        </div>
-
-	<div class="row">
-          <label for="f4ls">face 1 label size</label>
-          <input id="f4ls" type="range" min="3" max="10" value="4">
-        </div>
-
-	<div class="row">
-          <label for="f5l">face 5 label</label>
-          <input id="f5l" type="text" value="5">
-        </div>
-
-	<div class="row">
-          <label for="f5ls">face 1 label size</label>
-          <input id="f5ls" type="range" min="3" max="10" value="4">
-        </div>
-
-	<div class="row">
-          <label for="f6l">face 6 label</label>
-          <input id="f6l" type="text" value="6">
-        </div>
-
-	<div class="row">
-          <label for="f6ls">face 1 label size</label>
-          <input id="f6ls" type="range" min="3" max="10" value="4">
-        </div>
-
-        <div style="margin-top:10px">
-          <button class="btn" id="reset">reset</button>
-        </div>
-      </div>
-    </aside>
   </div>
 
-  <script>
+  <script type="module">
+    import * as THREE from './node_modules/three/build/three.module.js';
+    import { OrbitControls } from './node_modules/three/examples/jsm/controls/OrbitControls.js';
 
-    const faceAngles = {
-      1: { x: -90, y: 0 },
-      2: { x: 0,   y: 0 },
-      3: { x: 0,   y: -90 },
-      4: { x: 0,   y: 90 },
-      5: { x: 0,   y: 180 },
-      6: { x: 90,  y: 0 }
-    };
+    // ===== 基本セットアップ =====
+    const scene = new THREE.Scene();
 
-    const root = document.documentElement;
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+    //camera.position.set(3.5, 2.2, 3.5);
+    camera.position.set(0, 0, 0);
+    camera.lookAt(0, 0, 0);
 
-    const $ = (id)=>document.getElementById(id);
-    const bg = $("bg");
-    const faceBg = $("faceBg");
-    const faceColor = $("faceColor");
-    const br = $("br");
-    const brVal = $("brVal");
-    const borderToggle = $("borderToggle");
-    const bw = $("bw");
-    const bwVal = $("bwVal");
-    const rsc = $("rsc");
-    const rscVal = $("rscVal");
-    const arw = $("arw");
-    const arwVal = $("arwVal");
-    const arst = $("arst");
-    const arstVal = $("arstVal");
-    const f1l = $("f1l");
-    const f1ls = $("f1ls");
-    const f2l = $("f2l");
-    const f2ls = $("f2ls");
-    const f3l = $("f3l");
-    const f3ls = $("f3ls");
-    const f4l = $("f4l");
-    const f4ls = $("f4ls");
-    const f5l = $("f5l");
-    const f5ls = $("f5ls");
-    const f6l = $("f6l");
-    const f6ls = $("f6ls");
-    const bc = $("bc");
-    const reset = $("reset");
+    const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
 
-    function setVar(name, value){ root.style.setProperty(name, value); }
+    // ライト
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    const dir = new THREE.DirectionalLight(0xffffff, 0.9);
+    dir.position.set(5, 8, 3);
+    scene.add(dir);
 
-    bg.addEventListener("input", e => setVar("--bg", e.target.value));
-    faceBg.addEventListener("input", e => setVar("--face-bg", e.target.value));
-    faceColor.addEventListener("input", e => setVar("--face-color", e.target.value));
+    // ===== サイコロのマテリアル（1〜6の数字をCanvasで描画） =====
+    function faceTexture(n) {
+      const c = document.createElement('canvas');
+      c.width = c.height = 256;
+      const g = c.getContext('2d');
+      // 黒ベース + うっすら内側グロー
+      const grd = g.createRadialGradient(128,128,10,128,128,140);
+      grd.addColorStop(0, '#121212');
+      grd.addColorStop(1, '#000000');
+      g.fillStyle = grd;
+      g.fillRect(0,0,256,256);
 
-    br.addEventListener("input", e => {
-      brVal.textContent = `${e.target.value}px`;
-      setVar("--face-br", `${e.target.value}px`);
+      g.fillStyle = '#e5e5e5';
+      g.font = 'bold 160px system-ui, -apple-system, "Segoe UI", Roboto';
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillText(String(n), 128, 140);
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.anisotropy = renderer.capabilities.getMaxAnisotropy?.() ?? 1;
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    // BoxGeometry の面順（three標準）は：
+    // 0: RIGHT, 1: LEFT, 2: TOP, 3: BOTTOM, 4: FRONT, 5: BACK
+    // 数字の割り当てはお好みで。（ここでは FRONT=2, BACK=5 などとしています）
+    const materials = [
+      new THREE.MeshStandardMaterial({ map: faceTexture(3) }), // RIGHT
+      new THREE.MeshStandardMaterial({ map: faceTexture(4) }), // LEFT
+      new THREE.MeshStandardMaterial({ map: faceTexture(1) }), // TOP
+      new THREE.MeshStandardMaterial({ map: faceTexture(6) }), // BOTTOM
+      new THREE.MeshStandardMaterial({ map: faceTexture(2) }), // FRONT
+      new THREE.MeshStandardMaterial({ map: faceTexture(5) })  // BACK
+    ];
+
+    const cube = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), materials);
+    scene.add(cube);
+
+    // うっすらエッジ
+    const edges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(cube.geometry),
+      new THREE.LineBasicMaterial({ color:0x333333 })
+    );
+    cube.add(edges);
+
+    // ===== 操作系（任意） =====
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.07;
+    controls.enablePan = false;
+    controls.minDistance = 2.2;
+    controls.maxDistance = 8;
+
+    // ===== Auto Rotate =====
+    let autoRotate = true;
+    const autoState = document.getElementById('autoState');
+    document.getElementById('autoBtn').addEventListener('click', () => {
+      autoRotate = !autoRotate;
+      autoState.textContent = autoRotate ? 'ON' : 'OFF';
     });
 
-    bw.addEventListener("input", e => {
-      bwVal.textContent = `${e.target.value}px`;
-      setVar("--face-bw", `${e.target.value}px`);
-      if (parseInt(e.target.value,10) > 0 && !borderToggle.checked) {
-        borderToggle.checked = true;
+    // ===== Roll（90°単位でぴったり止まる） =====
+    function randInt(min, max) { return (min + Math.floor(Math.random() * (max - min + 1))); }
+
+function roll() {
+  const q = Math.PI / 2;      // 90°
+  const spinsX = randInt(0, 4); // 0~4回転
+  const spinsY = randInt(0, 4);
+  const endXIdx = randInt(0, 3); // 0,1,2,3 → 0,90,180,270°
+  const endYIdx = randInt(0, 3);
+
+  // 今の角度
+  const startX = cube.rotation.x;
+  const startY = cube.rotation.y;
+
+  // いまの「90°インデックス」
+  const curXIdx = Math.round(startX / q);
+  const curYIdx = Math.round(startY / q);
+
+  // 目標インデックスとの差（0..3に正規化）+ 回転数*4（=2π）
+  const dQuarterX = ((endXIdx - curXIdx) % 4 + 4) % 4;
+  const dQuarterY = ((endYIdx - curYIdx) % 4 + 4) % 4;
+
+  const deltaX = dQuarterX * q + spinsX * 2 * Math.PI;
+  const deltaY = dQuarterY * q + spinsY * 2 * Math.PI;
+
+  const endX = startX + deltaX;
+  const endY = startY + deltaY;
+
+  const duration = 1600; // ms
+  const t0 = performance.now();
+  const wasAuto = autoRotate;
+  autoRotate = false; // 自動回転と競合させない
+
+  const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+  function step(now) {
+    const t = Math.min(1, (now - t0) / duration);
+    const k = easeOutCubic(t);
+//    cube.rotation.x = startX + deltaX * k;
+//    cube.rotation.y = startY + deltaY * k;
+//alert((0 + Math.floor(Math.random() * (2 - 0 + 1))))
+
+    if (t < 1) {
+      requestAnimationFrame(step);
+    } else {
+      setTimeout(() => {
+        autoRotate = wasAuto;
+      },5000)
+    }
+  }
+  requestAnimationFrame(step);
+}
+
+    document.getElementById('rollBtn').addEventListener('click', roll);
+
+    // ===== ループ =====
+    function tick() {
+      if (autoRotate) {
+        cube.rotation.x += 0.005;
+        cube.rotation.y += 0.005;
+        cube.rotation.z += 0.005;
       }
-    });
-
-    arw.addEventListener("input", e => {
-      arwVal.textContent = `${e.target.value}sec`;
-    });
-
-    arst.addEventListener("input", e => {
-      arstVal.textContent = `${e.target.value}`;
-    });
-
-    rsc.addEventListener("input", e => {
-      rscVal.textContent = `${e.target.value}`;
-    });
-
-    f1l.addEventListener("input", e => {
-      document.getElementById('dice').getElementsByClassName('item')[0].textContent = e.target.value;
-    });
-
-    f1ls.addEventListener("input", e => {
-	    document.getElementById('dice').getElementsByClassName('item')[0].style = `font-size:${e.target.value}rem`
-    });
-
-    f2l.addEventListener("input", e => {
-      document.getElementById('dice').getElementsByClassName('item')[1].textContent = e.target.value;
-    });
-
-    f2ls.addEventListener("input", e => {
-	    document.getElementById('dice').getElementsByClassName('item')[1].style = `font-size:${e.target.value}rem`
-    });
-
-    f3l.addEventListener("input", e => {
-      document.getElementById('dice').getElementsByClassName('item')[2].textContent = e.target.value;
-    });
-
-    f3ls.addEventListener("input", e => {
-	    document.getElementById('dice').getElementsByClassName('item')[2].style = `font-size:${e.target.value}rem`
-    });
-
-    f4l.addEventListener("input", e => {
-      document.getElementById('dice').getElementsByClassName('item')[3].textContent = e.target.value;
-    });
-
-    f4ls.addEventListener("input", e => {
-	    document.getElementById('dice').getElementsByClassName('item')[3].style = `font-size:${e.target.value}rem`
-    });
-
-    f5l.addEventListener("input", e => {
-      document.getElementById('dice').getElementsByClassName('item')[4].textContent = e.target.value;
-    });
-
-    f5ls.addEventListener("input", e => {
-	    document.getElementById('dice').getElementsByClassName('item')[4].style = `font-size:${e.target.value}rem`
-    });
-
-    f6l.addEventListener("input", e => {
-      document.getElementById('dice').getElementsByClassName('item')[5].textContent = e.target.value;
-    });
-
-    f6ls.addEventListener("input", e => {
-	    document.getElementById('dice').getElementsByClassName('item')[5].style = `font-size:${e.target.value}rem`
-    });
-
-    bc.addEventListener("input", e => setVar("--face-bc", e.target.value));
-
-    borderToggle.addEventListener("change", e => {
-      setVar("--face-bw", e.target.checked ? `${bw.value}px` : "0px");
-    });
-
-    reset.addEventListener("click", () => {
-      bg.value = "#00ff00"; setVar("--bg", "#0f0");
-      faceBg.value = "#000000"; setVar("--face-bg", "#000");
-      faceColor.value = "#dddddd"; setVar("--face-color", "#ddd");
-      br.value = 0; brVal.textContent = "0px"; setVar("--face-br", "0px");
-      borderToggle.checked = true;
-      bw.value = 1; bwVal.textContent = "1px"; setVar("--face-bw", "1px");
-      bc.value = "#333333"; setVar("--face-bc", "#333333");
-    });
-
-    const dice = document.getElementById("dice");
-
-    let loopInterval = null;
-
-    function startAutoRotate(){
-      loopInterval = setInterval(() => {
-        const target = faceAngles[(Math.floor(Math.random() * 6) + 1)];
-        const randX = 360 * (Math.floor(Math.random() * arst.value) + 2);
-        const randY = 360 * (Math.floor(Math.random() * arst.value) + 2);
-        const finalX = randX + target.x;
-        const finalY = randY + target.y;
-        dice.style.transition = "transform 10s ease-out";
-        dice.style.transform = `rotateX(${finalX}deg) rotateY(${finalY}deg)`;
-      }, 6000);
+      controls.update();
+      renderer.render(scene, camera);
+      requestAnimationFrame(tick);
     }
-    startAutoRotate();
+    tick();
 
-    //ipc
-    if (window.diceAPI) {
-      window.diceAPI.onRoll((payload) => {
-        clearInterval(loopInterval);
-        loopInterval = null;
+    // ===== リサイズ対応 =====
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
 
-        const face = typeof payload === 'number' ? payload : payload?.face;
-
-        const target = faceAngles[face];
-
-        dice.style.transition = "transform 3s ease-out";
-
-        // ランダムに数回転させる
-        const randX = 360 * (Math.floor(Math.random() * rsc.value) + 2);
-        const randY = 360 * (Math.floor(Math.random() * rsc.value) + 2);
-
-        const finalX = randX + target.x;
-        const finalY = randY + target.y;
-
-        dice.style.transform = `rotateX(${finalX}deg) rotateY(${finalY}deg)`;
-        const onEnd = (e) => {
-          if (e.propertyName !== 'transform') return;
-          dice.style.transition = "transform 3s ease-out";
-          dice.style.transform = `rotateX(${finalX + 1}deg) rotateY(${finalY + 1}deg)`;
-          const onEnd2 = (e) => {
-            if (e.propertyName !== 'transform') return;
-            dice.removeEventListener('transitionend', onEnd2);
-            //alert('[dice] transform end, elapsed ' + e.elapsedTime + ' sec');
-            window.diceAPI.notifyDone({ name });
-            loopInterval = setTimeout(() => {
-              loopInterval = null;
-              startAutoRotate();
-            }, arw.value * 1000);
-          };
-          dice.removeEventListener('transitionend', onEnd);
-          dice.addEventListener('transitionend', onEnd2, { once: true });
-        };
-        dice.addEventListener('transitionend', onEnd, { once: true });
-      });
-    }
+    //input
+    dicex.addEventListener("input", e => {
+      dicexVal.textContent = `x ${e.target.value / 10}`;
+      cube.rotation.x = e.target.value / 10
+    });
+    dicey.addEventListener("input", e => {
+      diceyVal.textContent = `y ${e.target.value / 10}`;
+      cube.rotation.y = e.target.value / 10
+    });
+    dicez.addEventListener("input", e => {
+      dicezVal.textContent = `z ${e.target.value / 10}`;
+      cube.rotation.z = e.target.value / 10
+    });
+    camerax.addEventListener("input", e => {
+      controls.enableDamping = false;               // 経路依存を無くす
+      cameraxVal.textContent = `x ${e.target.value / 10}`;
+      camera.position.x = e.target.value / 10
+      controls?.update();   
+    });
+    cameray.addEventListener("input", e => {
+      controls.enableDamping = false;               // 経路依存を無くす
+      camerayVal.textContent = `y ${e.target.value / 10}`;
+      camera.position.y = e.target.value / 10
+      controls?.update();   
+    });
+/* なくていいかも
+    cameraz.addEventListener("input", e => {
+      controls.enableDamping = false;               // 経路依存を無くす
+      camerazVal.textContent = `z ${e.target.value / 10}`;
+      camera.position.z = e.target.value / 10
+      controls?.update();   
+    });
+*/
   </script>
 </body>
 </html>
