@@ -27,11 +27,11 @@ stages:
           # Windowsターゲットも作るなら wine を入れる（不要なら丸ごと削除OK）
           sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install -y wine64 wine32 git git-lfs 
+          sudo apt-get install -y wine64 wine32 git git-lfs zip
           sudo git lfs install
           npm ci
           npx electron-packager . live3ddice --platform=win32 --arch=x64 --icon=favicon.ico --overwrite
-          npx bestzip "live3ddice-win32-x64-$(cat ./package.json | jq -r .version).zip" ./live3ddice-win32-x64
+          zip -r "live3ddice-win32-x64-$(cat ./package.json | jq -r .version).zip" ./live3ddice-win32-x64
         displayName: 'Build with electron-builder (win + zip)'
       # dist/*.zip などを GitHub Release に添付
       - task: GitHubRelease@1
