@@ -168,15 +168,20 @@
         </div>
 
         <div class="row">
-          <label for="arw">auto rotate wait</label>
+          <label for="rsc">rotate spin count</label>
+          <input id="rsc" type="range" min="4" max="30" value="10">
+          <span id="rscVal">4</span>
+        </div>
+
+        <div class="row">
+          <label for="arw">Auto-rotate wait</label>
           <input id="arw" type="range" min="5" max="30" value="10">
           <span id="arwVal">10sec</span>
         </div>
         
 	<div class="row">
-          <label for="arst">auto rotate spin times</label>
+          <label for="arst">Auto-rotate spin count</label>
           <input id="arst" type="range" min="4" max="30" value="4">
-          <span id="arstVal">4</span>
         </div>
 
 	<div class="row">
@@ -268,6 +273,8 @@
     const borderToggle = $("borderToggle");
     const bw = $("bw");
     const bwVal = $("bwVal");
+    const rsc = $("rsc");
+    const rscVal = $("rscVal");
     const arw = $("arw");
     const arwVal = $("arwVal");
     const arst = $("arst");
@@ -312,6 +319,10 @@
 
     arst.addEventListener("input", e => {
       arstVal.textContent = `${e.target.value}`;
+    });
+
+    rsc.addEventListener("input", e => {
+      rscVal.textContent = `${e.target.value}`;
     });
 
     f1l.addEventListener("input", e => {
@@ -408,8 +419,8 @@
         dice.style.transition = "transform 3s ease-out";
 
         // ランダムに数回転させる
-        const randX = 360 * (Math.floor(Math.random() * 4) + 2);
-        const randY = 360 * (Math.floor(Math.random() * 4) + 2);
+        const randX = 360 * (Math.floor(Math.random() * rsc.value) + 2);
+        const randY = 360 * (Math.floor(Math.random() * rsc.value) + 2);
 
         const finalX = randX + target.x;
         const finalY = randY + target.y;
