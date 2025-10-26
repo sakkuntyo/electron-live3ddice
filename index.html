@@ -115,12 +115,12 @@
     <div class="left">
       <div class="stage">
         <div class="dice" id="dice">
-          <div class="item">1</div>
-          <div class="item">2</div>
-          <div class="item">3</div>
-          <div class="item">4</div>
-          <div class="item">5</div>
-          <div class="item">6</div>
+          <div class="item" style="font-size:3rem">1</div>
+          <div class="item" style="font-size:3rem">2</div>
+          <div class="item" style="font-size:3rem">3</div>
+          <div class="item" style="font-size:3rem">4</div>
+          <div class="item" style="font-size:3rem">5</div>
+          <div class="item" style="font-size:3rem">6</div>
         </div>
       </div>
     </div>
@@ -184,6 +184,61 @@
           <input id="f1l" type="text" value="1">
         </div>
 
+	<div class="row">
+          <label for="f1ls">face 1 label size</label>
+          <input id="f1ls" type="range" min="3" max="10" value="4">
+        </div>
+
+	<div class="row">
+          <label for="f2l">face 2 label</label>
+          <input id="f2l" type="text" value="2">
+        </div>
+
+	<div class="row">
+          <label for="f2ls">face 2 label size</label>
+          <input id="f2ls" type="range" min="3" max="10" value="4">
+        </div>
+
+	<div class="row">
+          <label for="f3l">face 3 label</label>
+          <input id="f3l" type="text" value="3">
+        </div>
+
+	<div class="row">
+          <label for="f3ls">face 1 label size</label>
+          <input id="f3ls" type="range" min="3" max="10" value="4">
+        </div>
+
+	<div class="row">
+          <label for="f4l">face 4 label</label>
+          <input id="f4l" type="text" value="4">
+        </div>
+
+	<div class="row">
+          <label for="f4ls">face 1 label size</label>
+          <input id="f4ls" type="range" min="3" max="10" value="4">
+        </div>
+
+	<div class="row">
+          <label for="f5l">face 5 label</label>
+          <input id="f5l" type="text" value="5">
+        </div>
+
+	<div class="row">
+          <label for="f5ls">face 1 label size</label>
+          <input id="f5ls" type="range" min="3" max="10" value="4">
+        </div>
+
+	<div class="row">
+          <label for="f6l">face 6 label</label>
+          <input id="f6l" type="text" value="6">
+        </div>
+
+	<div class="row">
+          <label for="f6ls">face 1 label size</label>
+          <input id="f6ls" type="range" min="3" max="10" value="4">
+        </div>
+
         <div style="margin-top:10px">
           <button class="btn" id="reset">reset</button>
         </div>
@@ -217,6 +272,18 @@
     const arwVal = $("arwVal");
     const arst = $("arst");
     const arstVal = $("arstVal");
+    const f1l = $("f1l");
+    const f1ls = $("f1ls");
+    const f2l = $("f2l");
+    const f2ls = $("f2ls");
+    const f3l = $("f3l");
+    const f3ls = $("f3ls");
+    const f4l = $("f4l");
+    const f4ls = $("f4ls");
+    const f5l = $("f5l");
+    const f5ls = $("f5ls");
+    const f6l = $("f6l");
+    const f6ls = $("f6ls");
     const bc = $("bc");
     const reset = $("reset");
 
@@ -245,6 +312,54 @@
 
     arst.addEventListener("input", e => {
       arstVal.textContent = `${e.target.value}`;
+    });
+
+    f1l.addEventListener("input", e => {
+      document.getElementById('dice').getElementsByClassName('item')[0].textContent = e.target.value;
+    });
+
+    f1ls.addEventListener("input", e => {
+	    document.getElementById('dice').getElementsByClassName('item')[0].style = `font-size:${e.target.value}rem`
+    });
+
+    f2l.addEventListener("input", e => {
+      document.getElementById('dice').getElementsByClassName('item')[1].textContent = e.target.value;
+    });
+
+    f2ls.addEventListener("input", e => {
+	    document.getElementById('dice').getElementsByClassName('item')[1].style = `font-size:${e.target.value}rem`
+    });
+
+    f3l.addEventListener("input", e => {
+      document.getElementById('dice').getElementsByClassName('item')[2].textContent = e.target.value;
+    });
+
+    f3ls.addEventListener("input", e => {
+	    document.getElementById('dice').getElementsByClassName('item')[2].style = `font-size:${e.target.value}rem`
+    });
+
+    f4l.addEventListener("input", e => {
+      document.getElementById('dice').getElementsByClassName('item')[3].textContent = e.target.value;
+    });
+
+    f4ls.addEventListener("input", e => {
+	    document.getElementById('dice').getElementsByClassName('item')[3].style = `font-size:${e.target.value}rem`
+    });
+
+    f5l.addEventListener("input", e => {
+      document.getElementById('dice').getElementsByClassName('item')[4].textContent = e.target.value;
+    });
+
+    f5ls.addEventListener("input", e => {
+	    document.getElementById('dice').getElementsByClassName('item')[4].style = `font-size:${e.target.value}rem`
+    });
+
+    f6l.addEventListener("input", e => {
+      document.getElementById('dice').getElementsByClassName('item')[5].textContent = e.target.value;
+    });
+
+    f6ls.addEventListener("input", e => {
+	    document.getElementById('dice').getElementsByClassName('item')[5].style = `font-size:${e.target.value}rem`
     });
 
     bc.addEventListener("input", e => setVar("--face-bc", e.target.value));
